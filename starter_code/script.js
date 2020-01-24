@@ -1,10 +1,10 @@
-window.onload = function() {
-  document.getElementById("start-button").onclick = function() {
-    startGame();
+window.onload = function () {
+  document.getElementById("start-button").onclick = function () {
+
+    flappyBird.startGame();
+
   };
+  flappyBird.init('myGame');
 
-  function startGame() {
-
-  }
 
 };
