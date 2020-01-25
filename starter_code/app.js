@@ -7,9 +7,12 @@ const flappyBird = {
     canvasDom: undefined,
     ctx: undefined,
     obs: undefined,
-    obstacles: [],
+    obstaclesBottom: [],
+    obstaclesTop: [],
     fpsCounter: 60,
     framesCounter: 0,
+    score: 0,
+
     canvas: undefined,
     wSize: {
         width: 700,
@@ -18,15 +21,15 @@ const flappyBird = {
     refresh: 0,
 
 
+
+
     init(id) {
         this.canvasDom = document.getElementById(id)
         this.ctx = this.canvasDom.getContext('2d')
         this.canvasDom.width = this.wSize.width
         this.canvasDom.height = this.wSize.height
-
-        this.setEventListeners()
+        scoreBoard.init(this.ctx)
         this.startGame()
-
     },
 
     startGame() {
@@ -38,37 +41,40 @@ const flappyBird = {
             this.moveAll()
             this.generateObstacles()
             this.clearObstacles()
-
+            this.isCollision()
+            if (this.isCollision()) {
+                this.gameOver();
+            }
+            this.score += 0.01;
+            this.drawScore();
         }, 1000 / this.fpsCounter)
+
     },
 
     reset() {
 
         this.background = new Background(this.ctx, this.wSize.width, this.wSize.height)
         this.player = new Player(this.ctx, this.wSize.width, this.wSize.height);
-        this.obstacles = [];
-
+        this.obstaclesBottom = [];
+        this.obstaclesTop = [];
+        this.scoreBoard = scoreBoard;
 
     },
 
     drawAll() {
+
         this.background.draw();
         this.player.draw(this.framesCounter);
-        this.obstacles.forEach(obs => obs.draw());
-
-
-    },
-
-
-
-    setEventListeners() {
+        this.obstaclesBottom.forEach(obs => obs.draw());
+        this.obstaclesTop.forEach(obs => obs.draw());
 
     },
 
     moveAll() {
         this.background.move();
         this.player.move();
-        this.obstacles.forEach(obs => obs.move());
+        this.obstaclesBottom.forEach(obs => obs.move());
+        this.obstaclesTop.forEach(obs => obs.move());
 
     },
 
@@ -77,18 +83,27 @@ const flappyBird = {
     },
 
     generateObstacles() {
-        if (this.framesCounter % 70 == 0) {
-            //Generamos obstaculos cada 70 frames.
-            this.obstacles.push(new Obstacle(this.ctx, this.wSize.width, this.wSize.posY0, this.player.height)); //pusheamos nuevos obstaculos
-            console.log(this.obstacles)
+
+        if (this.framesCounter % 80 == 0) {
+            let randomNumber1 = Math.floor(Math.random() * -150)
+            let randomNumber2 = randomNumber1 + 450
+            //Generamos obstaculos cada 80 frames.
+            this.obstaclesBottom.push(new ObstacleBottom(this.ctx, this.wSize.width, randomNumber2)); //pusheamos nuevos obstaculos
+            this.obstaclesTop.push(new ObstacleTop(this.ctx, this.wSize.width, randomNumber1)); //pusheamos nuevos obstaculos
         }
     },
 
     clearObstacles() {
         //funcion para limpiar obs
-        this.obstacles.forEach((obs, idx) => {
-            if (obs.posX <= 0) {
-                this.obstacles.splice(idx, 1);
+        this.obstaclesBottom.forEach((obs, idx) => {
+            if (obs.posX <= -80) {
+                this.obstaclesBottom.splice(idx, 1);
+
+            }
+        });
+        this.obstaclesTop.forEach((obs, idx) => {
+            if (obs.posX <= -80) {
+                this.obstaclesTop.splice(idx, 1);
             }
         });
     },
@@ -96,18 +111,25 @@ const flappyBird = {
     isCollision() {
         // funcion para comprobar colisiones
 
-        return this.obstacles.some(
-            obs =>
-                this.player.posX + this.player.width >= obs.posX &&
-                this.player.posY + this.player.height >= obs.posY &&
-                this.player.posX <= obs.posX + obs.width
-        );
+        if (this.player.posX <= this.obstaclesBottom[0].posX + this.obstaclesBottom[0].width && this.player.posX + this.player.width >= this.obstaclesBottom[0].posX && this.player.posY + this.player.height >= this.obstaclesBottom[0].posY) {
+
+            return true
+        }
+
+        if (this.player.posX <= this.obstaclesTop[0].posX + this.obstaclesTop[0].width && this.player.posX + this.player.width >= this.obstaclesTop[0].posX && this.player.posY <= this.obstaclesTop[0].posY + this.obstaclesTop[0].height) {
+            return true
+        }
+
         //fin del juego, detenemos intervalo
     },
 
     gameOver() {
         //Gameover detiene el juego.
         clearInterval(this.interval);
+    },
+
+    drawScore() {
+        this.scoreBoard.update(this.score);
     }
 
 }
