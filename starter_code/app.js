@@ -120,12 +120,17 @@ const flappyBird = {
             return true
         }
 
+        if (this.player.posY >= this.wSize.height) {
+            return true
+        }
+
         //fin del juego, detenemos intervalo
     },
 
     gameOver() {
         //Gameover detiene el juego.
         clearInterval(this.interval);
+        alert('GAME OVER')
     },
 
     drawScore() {
